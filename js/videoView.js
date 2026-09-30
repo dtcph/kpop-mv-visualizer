@@ -1,0 +1,214 @@
+// Screen 2: hub-and-spoke spring layout of every video in the selected year.
+// d3-force simulation, driven manually (not its internal timer) so we can
+// pause it while inactive. Canvas-rendered, quadtree-based hit testing.
+
+import { clamp, colorForVideo } from './utils.js';
+import { showTooltip, hideTooltip } from './tooltip.js';
+
+export class VideoView {
+  constructor(config) {
+    this.config = config;
+    this.width = 0;
+    this.height = 0;
+    this.nodes = [];
+    this.links = [];
+    this.hub = null;
+    this.hovered = null;
+    this.dragging = null;
+    this.pointer = { x: -9999, y: -9999, down: false, moved: false, downX: 0, downY: 0 };
+    this.simulation = null;
+    this.entryT0 = 0;
+  }
+
+  resize(width, height) {
+    this.width = width;
+    this.height = height;
+    if (!this.hub) return;
+
+    const c = this.config;
+    this.hub.x = this.hub.fx = width / 2;
+    this.hub.y = this.hub.fy = height / 2;
+    this.hub.radius = c.hubRadius;
+    for (const n of this.nodes) n.radius = c.nodeRadius;
+
+    if (this.simulation) {
+      this.simulation
+        .force('link')
+        .distance(c.linkDistance);
+      this.simulation.force('collide', d3.forceCollide((d) => d.radius + c.collidePadding));
+      this.simulation.force('x', d3.forceX(width / 2).strength(0.02));
+      this.simulation.force('y', d3.forceY(height / 2).strength(0.02));
+      this.simulation.alpha(Math.max(this.simulation.alpha(), 0.3));
+    }
+  }
+
+  setYear(yearData) {
+    const cx = this.width / 2;
+    const cy = this.height / 2;
+    const c = this.config;
+
+    this.hub = { id: 'hub', isHub: true, x: cx, y: cy, fx: cx, fy: cy, radius: c.hubRadius, year: yearData.year, count: yearData.count };
+
+    this.nodes = yearData.videos.map((v, i) => {
+      const angle = (i / yearData.videos.length) * Math.PI * 2;
+      return {
+        id: i,
+        video: v,
+        isHub: false,
+        x: cx + Math.cos(angle) * 4,
+        y: cy + Math.sin(angle) * 4,
+        radius: c.nodeRadius,
+      };
+    });
+
+    this.links = this.nodes.map((n) => ({ source: this.hub, target: n }));
+
+    const allNodes = [this.hub, ...this.nodes];
+
+    this.simulation = d3
+      .forceSimulation(allNodes)
+      .alphaDecay(c.videoAlphaDecay)
+      .velocityDecay(c.videoVelocityDecay)
+      .force(
+        'link',
+        d3.forceLink(this.links).distance(c.linkDistance).strength(c.linkStrength)
+      )
+      .force('charge', d3.forceManyBody().strength(-c.chargeStrength).theta(0.85))
+      .force('collide', d3.forceCollide((d) => d.radius + c.collidePadding))
+      .force('x', d3.forceX(cx).strength(0.02))
+      .force('y', d3.forceY(cy).strength(0.02))
+      .stop();
+
+    this.simulation.alpha(1);
+    this.hovered = null;
+    this.dragging = null;
+    hideTooltip();
+  }
+
+  // --- pointer handling -----------------------------------------------
+
+  handleMouseMove(x, y) {
+    this.pointer.x = x;
+    this.pointer.y = y;
+    if (this.pointer.down && !this.pointer.moved) {
+      if (Math.hypot(x - this.pointer.downX, y - this.pointer.downY) > 4) this.pointer.moved = true;
+    }
+    if (this.dragging) {
+      this.dragging.fx = x;
+      this.dragging.fy = y;
+      if (this.simulation.alpha() < 0.3) this.simulation.alpha(0.3);
+    }
+  }
+
+  handleMouseDown(x, y) {
+    this.pointer.down = true;
+    this.pointer.moved = false;
+    this.pointer.downX = x;
+    this.pointer.downY = y;
+    if (this.hovered && !this.hovered.isHub) {
+      this.dragging = this.hovered;
+      this.dragging.fx = x;
+      this.dragging.fy = y;
+    }
+  }
+
+  handleMouseUp(x, y) {
+    this.pointer.down = false;
+    if (this.dragging) {
+      this.dragging.fx = null;
+      this.dragging.fy = null;
+      this.dragging = null;
+      return;
+    }
+    if (!this.pointer.moved) {
+      const target = this.hovered;
+      if (target && !target.isHub && target.video.hasLink) {
+        window.open(target.video.link, '_blank', 'noopener');
+      }
+    }
+  }
+
+  handleMouseLeave() {
+    this.pointer.x = -9999;
+    this.pointer.y = -9999;
+    this.hovered = null;
+    hideTooltip();
+  }
+
+  // --- simulation update ------------------------------------------------
+
+  update() {
+    if (!this.simulation) return;
+    if (this.simulation.alpha() > this.simulation.alphaMin() || this.dragging) {
+      this.simulation.tick();
+    }
+
+    // Hit-test once per frame using the simulation's internal quadtree
+    // (built each tick by the many-body force) instead of scanning nodes.
+    const found = this.simulation.find(this.pointer.x, this.pointer.y, this.config.nodeRadius + 6);
+    if (found !== this.hovered) {
+      this.hovered = found;
+      if (found && !found.isHub) {
+        showTooltip(found.video, this.pointer.x, this.pointer.y);
+      } else {
+        hideTooltip();
+      }
+    } else if (found && !found.isHub) {
+      showTooltip(found.video, this.pointer.x, this.pointer.y);
+    }
+  }
+
+  // --- rendering ----------------------------------------------------
+
+  render(ctx) {
+    ctx.clearRect(0, 0, this.width, this.height);
+
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(155, 91, 255, 0.18)';
+    ctx.beginPath();
+    for (const l of this.links) {
+      ctx.moveTo(l.source.x, l.source.y);
+      ctx.lineTo(l.target.x, l.target.y);
+    }
+    ctx.stroke();
+
+    const nodeColor = this.config.nodeColor;
+    for (const n of this.nodes) {
+      const isHover = n === this.hovered;
+      const r = n.radius * (isHover ? 1.35 : 1);
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = n.video.hasLink ? nodeColor : 'rgba(138, 138, 160, 0.6)';
+      ctx.fill();
+      if (isHover) {
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+      }
+    }
+
+    // hub
+    ctx.beginPath();
+    ctx.arc(this.hub.x, this.hub.y, this.hub.radius, 0, Math.PI * 2);
+    const grad = ctx.createRadialGradient(this.hub.x, this.hub.y, 0, this.hub.x, this.hub.y, this.hub.radius);
+    grad.addColorStop(0, '#ff2fd0');
+    grad.addColorStop(1, '#9b5bff');
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#06060a';
+    ctx.font = `800 ${clamp(this.hub.radius * 0.5, 14, 30)}px Unbounded, sans-serif`;
+    ctx.fillText(String(this.hub.year), this.hub.x, this.hub.y - this.hub.radius * 0.18);
+    ctx.font = `500 ${clamp(this.hub.radius * 0.22, 10, 15)}px Inter, sans-serif`;
+    ctx.fillText(`${this.hub.count} videos`, this.hub.x, this.hub.y + this.hub.radius * 0.32);
+  }
+
+  cursorStyle() {
+    if (this.dragging) return 'grabbing';
+    if (!this.hovered) return 'default';
+    if (this.hovered.isHub) return 'default';
+    return this.hovered.video.hasLink ? 'pointer' : 'default';
+  }
+}
