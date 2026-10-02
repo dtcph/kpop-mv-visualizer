@@ -1,52 +1,48 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>K-Pop MV Explorer 1995&ndash;2020</title>
+    <title>K-Pop MV Explorer</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+KR:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
+    <link href="https://fonts.googleapis.com/css?family=Black+Han+Sans:400" rel="stylesheet" />
     <link rel="stylesheet" href="style/main.css" />
   </head>
   <body>
     <canvas id="stage"></canvas>
 
+    <div id="langToggle" role="group" data-i18n-aria-label="langGroup">
+      <button type="button" data-lang="kr" aria-pressed="true">KR</button>
+      <button type="button" data-lang="en" aria-pressed="false">EN</button>
+    </div>
+
     <header id="hud">
-      <h1 id="title">K-POP MV EXPLORER</h1>
-      <p id="hint">
-        move the mouse fast to push the balls &middot; click a year to explore
-      </p>
+      <h1 id="title" data-i18n="appTitle"></h1>
+      <p id="hint" data-i18n="hint"></p>
     </header>
 
-    <button id="backBtn" class="hidden" aria-label="Back to years">
-      &larr; Back
-    </button>
+    <button id="backBtn" class="hidden" data-i18n="back" data-i18n-aria-label="backAria"></button>
 
     <div id="tooltip" class="hidden"></div>
 
     <div id="welcome" class="hidden" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
       <div id="welcomeCard">
-        <button id="welcomeClose" aria-label="Close">&times;</button>
-        <h2 id="welcomeTitle">Welcome to K-POP MV Explorer</h2>
-        <p>
-          A visualizer of K-pop music videos on YouTube from 1995 to 2020,
-          with every ball representing a year or a video.
-        </p>
-        <p>
-          Move your mouse fast to push the balls around, then click a year to
-          explore its videos. Hover a video for details and click it to watch.
-          Press Esc or Back to return to the years.
-        </p>
+        <button id="welcomeClose" data-i18n-aria-label="close">&times;</button>
+        <h2 id="welcomeTitle" data-i18n="welcomeTitle"></h2>
+        <p data-i18n="welcomeP1"></p>
+        <p data-i18n="welcomeP2"></p>
       </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
 
+    <script type="module" src="js/i18n.js"></script>
     <script type="module" src="js/main.js"></script>
   </body>
 </html>

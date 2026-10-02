@@ -2,6 +2,7 @@
 // center force field + mouse-push interaction). Canvas-rendered.
 
 import { clamp, lerp, easeOutCubic, makeYearColorScale, makeRadiusScale, makeGlowSprite, colorWithAlpha } from './utils.js';
+import { canvasFont, formatYear, formatCount } from './i18n.js';
 
 const { Engine, Bodies, Body, World, Query } = Matter;
 
@@ -266,10 +267,10 @@ export class YearView {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#06060a';
-    ctx.font = `800 ${yearSize}px Unbounded, sans-serif`;
-    ctx.fillText(String(b.year), b.body.position.x, b.body.position.y - countSize * 0.6);
-    ctx.font = `500 ${countSize}px Inter, sans-serif`;
-    ctx.fillText(`${b.count} videos`, b.body.position.x, b.body.position.y + yearSize * 0.55);
+    ctx.font = canvasFont('display', 800, yearSize);
+    ctx.fillText(formatYear(b.year), b.body.position.x, b.body.position.y - countSize * 0.6);
+    ctx.font = canvasFont('body', 500, countSize);
+    ctx.fillText(formatCount(b.count), b.body.position.x, b.body.position.y + yearSize * 0.55);
   }
 
   // cursor state for main.js to apply to the canvas element

@@ -7,6 +7,7 @@ import { YearView } from "./yearView.js";
 import { VideoView } from "./videoView.js";
 import { hideTooltip } from "./tooltip.js";
 import { initWelcome } from "./welcome.js";
+import { getLang, setLang, onLangChange, ensureFonts } from "./i18n.js";
 
 initWelcome();
 
@@ -106,6 +107,24 @@ window.addEventListener("keydown", (e) => {
   if (e.key === "Escape") goBackToYears();
 });
 
+// --- language toggle -----------------------------------------------
+// Text is re-applied by i18n.js and the tooltip; canvas text reads the
+// active language every frame, so nothing in the simulations is touched.
+
+const langButtons = document.querySelectorAll("#langToggle button");
+function syncLangToggle() {
+  for (const b of langButtons) {
+    const active = b.dataset.lang === getLang();
+    b.setAttribute("aria-pressed", String(active));
+    b.classList.toggle("active", active);
+  }
+}
+for (const b of langButtons) {
+  b.addEventListener("click", () => setLang(b.dataset.lang));
+}
+onLangChange(syncLangToggle);
+syncLangToggle();
+
 // --- pointer events (delegated to the active view) ---------------------
 
 function activeView() {
@@ -123,12 +142,24 @@ canvas.addEventListener("mousemove", (e) => {
   canvas.style.cursor = activeView().cursorStyle();
 });
 
+// A click only counts if it both started and ended on the canvas while the
+// welcome popup is closed (otherwise closing the popup would click the ball
+// underneath it).
+const welcomeEl = document.getElementById("welcome");
+const welcomeOpen = () => !welcomeEl.classList.contains("hidden");
+let pressedOnCanvas = false;
+
 canvas.addEventListener("mousedown", (e) => {
+  if (welcomeOpen()) return;
+  pressedOnCanvas = true;
   const { x, y } = pointerPos(e);
   activeView().handleMouseDown(x, y);
 });
 
 window.addEventListener("mouseup", (e) => {
+  if (!pressedOnCanvas) return;
+  pressedOnCanvas = false;
+  if (welcomeOpen()) return;
   const { x, y } = pointerPos(e);
   activeView().handleMouseUp(x, y);
   canvas.style.cursor = activeView().cursorStyle();
@@ -160,6 +191,7 @@ function frame(now) {
 
 async function boot() {
   resize();
+  await ensureFonts(); // so canvas text is measured with the real fonts
   const data = await loadVideos();
   years = data.years;
   yearView.setData(years);

@@ -1,6 +1,8 @@
 // Loads and parses data/videos.csv into a per-year grouped structure.
 // CSV header (verified): Date,Artist,Song Name,Korean Name,Director,Video,Type,Release
 
+import { getLang } from './i18n.js';
+
 const MIN_YEAR = 1995;
 const MAX_YEAR = 2020;
 
@@ -50,4 +52,20 @@ export async function loadVideos() {
     .sort((a, b) => a.year - b.year);
 
   return { years, minYear: MIN_YEAR, maxYear: MAX_YEAR };
+}
+
+// Language-aware field accessor. The CSV only has Korean text for song names
+// ("Korean Name"); every other field has a single version and is returned
+// as-is in both languages. Missing values fall back to the other version.
+//   title:    KR -> Korean name (else romanized); EN -> romanized (else Korean)
+//   subtitle: KR -> romanized name when a Korean name is shown; EN -> ''
+export function getVideoField(video, field, lang = getLang()) {
+  switch (field) {
+    case 'title':
+      return lang === 'kr' ? video.korean || video.song : video.song || video.korean;
+    case 'subtitle':
+      return lang === 'kr' && video.korean ? video.song : '';
+    default:
+      return video[field] || '';
+  }
 }

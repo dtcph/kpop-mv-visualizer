@@ -3,6 +3,7 @@
 // pause it while inactive. Canvas-rendered, quadtree-based hit testing.
 
 import { clamp, hashColor } from './utils.js';
+import { canvasFont, formatYear, formatCount } from './i18n.js';
 import { showTooltip, hideTooltip } from './tooltip.js';
 
 // Pulls nodes toward the centroid of their own artist group each tick, so
@@ -221,10 +222,10 @@ export class VideoView {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#06060a';
-    ctx.font = `800 ${clamp(this.hub.radius * 0.5, 14, 30)}px Unbounded, sans-serif`;
-    ctx.fillText(String(this.hub.year), this.hub.x, this.hub.y - this.hub.radius * 0.18);
-    ctx.font = `500 ${clamp(this.hub.radius * 0.22, 10, 15)}px Inter, sans-serif`;
-    ctx.fillText(`${this.hub.count} videos`, this.hub.x, this.hub.y + this.hub.radius * 0.32);
+    ctx.font = canvasFont('display', 800, clamp(this.hub.radius * 0.5, 14, 30));
+    ctx.fillText(formatYear(this.hub.year), this.hub.x, this.hub.y - this.hub.radius * 0.18);
+    ctx.font = canvasFont('body', 500, clamp(this.hub.radius * 0.22, 10, 15));
+    ctx.fillText(formatCount(this.hub.count), this.hub.x, this.hub.y + this.hub.radius * 0.32);
   }
 
   cursorStyle() {
