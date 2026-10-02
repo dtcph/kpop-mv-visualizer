@@ -14,8 +14,7 @@ export class VideoView {
     this.links = [];
     this.hub = null;
     this.hovered = null;
-    this.dragging = null;
-    this.pointer = { x: -9999, y: -9999, down: false, moved: false, downX: 0, downY: 0 };
+    this.pointer = { x: -9999, y: -9999, down: false, downX: 0, downY: 0 };
     this.simulation = null;
     this.entryT0 = 0;
   }
@@ -47,7 +46,18 @@ export class VideoView {
     const cy = this.height / 2;
     const c = this.config;
 
-    this.hub = { id: 'hub', isHub: true, x: cx, y: cy, fx: cx, fy: cy, radius: c.hubRadius, year: yearData.year, count: yearData.count };
+    this.hub = {
+      id: 'hub',
+      isHub: true,
+      x: cx,
+      y: cy,
+      fx: cx,
+      fy: cy,
+      radius: c.hubRadius,
+      year: yearData.year,
+      count: yearData.count,
+      color: yearData.color,
+    };
 
     this.nodes = yearData.videos.map((v, i) => {
       const angle = (i / yearData.videos.length) * Math.PI * 2;
@@ -81,7 +91,6 @@ export class VideoView {
 
     this.simulation.alpha(1);
     this.hovered = null;
-    this.dragging = null;
     hideTooltip();
   }
 
@@ -90,41 +99,19 @@ export class VideoView {
   handleMouseMove(x, y) {
     this.pointer.x = x;
     this.pointer.y = y;
-    if (this.pointer.down && !this.pointer.moved) {
-      if (Math.hypot(x - this.pointer.downX, y - this.pointer.downY) > 4) this.pointer.moved = true;
-    }
-    if (this.dragging) {
-      this.dragging.fx = x;
-      this.dragging.fy = y;
-      if (this.simulation.alpha() < 0.3) this.simulation.alpha(0.3);
-    }
   }
 
   handleMouseDown(x, y) {
     this.pointer.down = true;
-    this.pointer.moved = false;
     this.pointer.downX = x;
     this.pointer.downY = y;
-    if (this.hovered && !this.hovered.isHub) {
-      this.dragging = this.hovered;
-      this.dragging.fx = x;
-      this.dragging.fy = y;
-    }
   }
 
   handleMouseUp(x, y) {
     this.pointer.down = false;
-    if (this.dragging) {
-      this.dragging.fx = null;
-      this.dragging.fy = null;
-      this.dragging = null;
-      return;
-    }
-    if (!this.pointer.moved) {
-      const target = this.hovered;
-      if (target && !target.isHub && target.video.hasLink) {
-        window.open(target.video.link, '_blank', 'noopener');
-      }
+    const target = this.hovered;
+    if (target && !target.isHub && target.video.hasLink) {
+      window.open(target.video.link, '_blank', 'noopener');
     }
   }
 
@@ -139,7 +126,7 @@ export class VideoView {
 
   update() {
     if (!this.simulation) return;
-    if (this.simulation.alpha() > this.simulation.alphaMin() || this.dragging) {
+    if (this.simulation.alpha() > this.simulation.alphaMin()) {
       this.simulation.tick();
     }
 
@@ -187,13 +174,10 @@ export class VideoView {
       }
     }
 
-    // hub
+    // hub, flat-filled in the same color as the year ball it was opened from
     ctx.beginPath();
     ctx.arc(this.hub.x, this.hub.y, this.hub.radius, 0, Math.PI * 2);
-    const grad = ctx.createRadialGradient(this.hub.x, this.hub.y, 0, this.hub.x, this.hub.y, this.hub.radius);
-    grad.addColorStop(0, '#ff2fd0');
-    grad.addColorStop(1, '#9b5bff');
-    ctx.fillStyle = grad;
+    ctx.fillStyle = this.hub.color;
     ctx.fill();
 
     ctx.textAlign = 'center';
@@ -206,7 +190,6 @@ export class VideoView {
   }
 
   cursorStyle() {
-    if (this.dragging) return 'grabbing';
     if (!this.hovered) return 'default';
     if (this.hovered.isHub) return 'default';
     return this.hovered.video.hasLink ? 'pointer' : 'default';

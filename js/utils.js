@@ -28,7 +28,8 @@ export function fitCanvasToWindow(canvas) {
   return { ctx, width: w, height: h, dpr };
 }
 
-// Neon spectrum stops, sampled across the 1995-2020 timeline.
+// Neon spectrum stops, sampled across the timeline so each year gets a
+// distinct flat color (no gradients/glow applied to the balls themselves).
 const PALETTE_STOPS = ['#23e8ff', '#9b5bff', '#ff2fd0', '#ff5f6d', '#ffb020', '#d6ff2f'];
 
 export function makeYearColorScale(minYear, maxYear) {
@@ -52,11 +53,9 @@ export function makeRadiusScale(counts, minR, maxR) {
   };
 }
 
-// Pre-renders a radial-gradient glow sprite for a ball color/radius so we
-// never call shadowBlur per-frame on many shapes.
+// Pre-renders a flat solid-color ball sprite (no glow) for a given radius.
 export function makeGlowSprite(color, radius) {
-  const pad = radius * 0.4;
-  const size = Math.ceil((radius + pad) * 2);
+  const size = Math.ceil(radius * 2);
   const off = document.createElement('canvas');
   off.width = size;
   off.height = size;
@@ -64,21 +63,7 @@ export function makeGlowSprite(color, radius) {
   const cx = size / 2;
   const cy = size / 2;
 
-  // soft halo, kept subtle so many balls don't wash the background out
-  const grad = c.createRadialGradient(cx, cy, radius * 0.7, cx, cy, radius + pad);
-  grad.addColorStop(0, colorWithAlpha(color, 0.5));
-  grad.addColorStop(1, colorWithAlpha(color, 0));
-  c.fillStyle = grad;
-  c.beginPath();
-  c.arc(cx, cy, radius + pad, 0, Math.PI * 2);
-  c.fill();
-
-  // solid core on top, with a touch of shading for depth
-  const core = c.createRadialGradient(cx - radius * 0.3, cy - radius * 0.3, radius * 0.1, cx, cy, radius);
-  core.addColorStop(0, colorWithAlpha('#ffffff', 0.35));
-  core.addColorStop(0.35, color);
-  core.addColorStop(1, color);
-  c.fillStyle = core;
+  c.fillStyle = color;
   c.beginPath();
   c.arc(cx, cy, radius, 0, Math.PI * 2);
   c.fill();

@@ -1,11 +1,11 @@
 // Entry point: wires up data loading, canvas setup, the two views, and the
 // single requestAnimationFrame loop. All tunable constants live in CONFIG.
 
-import { loadVideos } from './data.js';
-import { fitCanvasToWindow } from './utils.js';
-import { YearView } from './yearView.js';
-import { VideoView } from './videoView.js';
-import { hideTooltip } from './tooltip.js';
+import { loadVideos } from "./data.js";
+import { fitCanvasToWindow } from "./utils.js";
+import { YearView } from "./yearView.js";
+import { VideoView } from "./videoView.js";
+import { hideTooltip } from "./tooltip.js";
 
 // ---------------------------------------------------------------------
 // Tuning constants. Sizes below marked "(auto)" are recomputed on resize
@@ -20,12 +20,12 @@ const CONFIG = {
   maxBallRadius: 110,
 
   // year-view physics
-  ballRestitution: 0.55,
-  ballFrictionAir: 0.045,
-  centerForceStrength: 0.00006, // force per ms scaling toward viewport center
-  pushSpeedThreshold: 14, // px/frame smoothed pointer speed before a push fires
-  pushScale: 0.9,
-  pushMaxImpulse: 28,
+  ballRestitution: 0.75,
+  ballFrictionAir: 0.45,
+  centerForceStrength: 0.00001, // force per ms scaling toward viewport center
+  pushSpeedThreshold: 16, // px/frame smoothed pointer speed before a push fires
+  pushScale: 0.7,
+  pushMaxImpulse: 10,
   selectTransitionMs: 600,
 
   // hub sizing (auto)
@@ -42,7 +42,7 @@ const CONFIG = {
   chargeStrength: 55,
   videoAlphaDecay: 0.02,
   videoVelocityDecay: 0.35,
-  nodeColor: '#23e8ff',
+  nodeColor: "#23e8ff",
 };
 
 function computeResponsiveConfig(width, height) {
@@ -56,13 +56,13 @@ function computeResponsiveConfig(width, height) {
 
 // --- setup -------------------------------------------------------------
 
-const canvas = document.getElementById('stage');
-const backBtn = document.getElementById('backBtn');
+const canvas = document.getElementById("stage");
+const backBtn = document.getElementById("backBtn");
 let ctx, width, height;
 
 const yearView = new YearView(CONFIG);
 const videoView = new VideoView(CONFIG);
-let state = 'year'; // 'year' | 'video'
+let state = "year"; // 'year' | 'video'
 let years = null;
 
 function resize() {
@@ -75,38 +75,38 @@ function resize() {
   videoView.resize(width, height);
 }
 
-window.addEventListener('resize', resize);
+window.addEventListener("resize", resize);
 
 // --- view switching ------------------------------------------------
 
 yearView.onSelectYear = (yearData) => {
-  state = 'video';
+  state = "video";
   videoView.setYear(yearData);
-  backBtn.classList.remove('hidden');
+  backBtn.classList.remove("hidden");
 };
 
 function goBackToYears() {
-  if (state !== 'video') return;
+  if (state !== "video") return;
   hideTooltip();
-  canvas.style.transition = 'opacity 220ms ease';
-  canvas.style.opacity = '0';
+  canvas.style.transition = "opacity 220ms ease";
+  canvas.style.opacity = "0";
   window.setTimeout(() => {
-    state = 'year';
+    state = "year";
     yearView.setData(years); // rebuild fresh so balls re-appear and settle
-    backBtn.classList.add('hidden');
-    canvas.style.opacity = '1';
+    backBtn.classList.add("hidden");
+    canvas.style.opacity = "1";
   }, 220);
 }
 
-backBtn.addEventListener('click', goBackToYears);
-window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') goBackToYears();
+backBtn.addEventListener("click", goBackToYears);
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") goBackToYears();
 });
 
 // --- pointer events (delegated to the active view) ---------------------
 
 function activeView() {
-  return state === 'year' ? yearView : videoView;
+  return state === "year" ? yearView : videoView;
 }
 
 function pointerPos(e) {
@@ -114,24 +114,24 @@ function pointerPos(e) {
   return { x: e.clientX - rect.left, y: e.clientY - rect.top };
 }
 
-canvas.addEventListener('mousemove', (e) => {
+canvas.addEventListener("mousemove", (e) => {
   const { x, y } = pointerPos(e);
   activeView().handleMouseMove(x, y);
   canvas.style.cursor = activeView().cursorStyle();
 });
 
-canvas.addEventListener('mousedown', (e) => {
+canvas.addEventListener("mousedown", (e) => {
   const { x, y } = pointerPos(e);
   activeView().handleMouseDown(x, y);
 });
 
-window.addEventListener('mouseup', (e) => {
+window.addEventListener("mouseup", (e) => {
   const { x, y } = pointerPos(e);
   activeView().handleMouseUp(x, y);
   canvas.style.cursor = activeView().cursorStyle();
 });
 
-canvas.addEventListener('mouseleave', () => {
+canvas.addEventListener("mouseleave", () => {
   activeView().handleMouseLeave();
 });
 
@@ -142,7 +142,7 @@ function frame(now) {
   const dt = now - lastT;
   lastT = now;
 
-  if (state === 'year') {
+  if (state === "year") {
     yearView.update(dt);
     yearView.render(ctx);
   } else {
@@ -164,5 +164,5 @@ async function boot() {
 }
 
 boot().catch((err) => {
-  console.error('Failed to load video data', err);
+  console.error("Failed to load video data", err);
 });
