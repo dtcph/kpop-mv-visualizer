@@ -22,10 +22,8 @@ const DICT = {
     close: '닫기',
     langGroup: '언어 선택',
     welcomeTitle: 'K-POP MV 탐색기에 오신 것을 환영합니다',
-    welcomeP1:
-      '1995년부터 2020년까지 유튜브에 공개된 K-pop 뮤직비디오를 보여주는 시각화입니다. 각 공은 하나의 연도 또는 하나의 영상을 나타냅니다.',
-    welcomeP2:
-      '마우스를 빠르게 움직여 공을 밀어낸 뒤, 연도를 클릭해 해당 연도의 영상을 살펴보세요. 영상 위에 마우스를 올리면 상세 정보가 나타나고, 클릭하면 영상을 볼 수 있습니다. Esc 키나 뒤로 버튼을 누르면 연도 화면으로 돌아갑니다.',
+    welcomeP1: '1995~2020년 K-pop 뮤직비디오가 공으로 변신했어요. 공 하나가 연도 하나, 점 하나가 영상 하나!',
+    welcomeP2: '마우스를 빠르게 휘둘러 공을 밀어보고, 연도를 클릭해 들어가 보세요. 뒤로 가려면 Esc나 뒤로 버튼! (공은 아파하지 않아요.)',
     year: '{y}년',
     videos: { other: '{n}개 영상' },
     untitled: '(제목 없음)',
@@ -46,10 +44,8 @@ const DICT = {
     close: 'Close',
     langGroup: 'Language',
     welcomeTitle: 'Welcome to K-POP MV Explorer',
-    welcomeP1:
-      'A visualizer of K-pop music videos on YouTube from 1995 to 2020, with every ball representing a year or a video.',
-    welcomeP2:
-      'Move your mouse fast to push the balls around, then click a year to explore its videos. Hover a video for details and click it to watch. Press Esc or Back to return to the years.',
+    welcomeP1: 'K-pop music videos from 1995 to 2020, turned into balls. One ball per year, one dot per video.',
+    welcomeP2: 'Shove the balls around with your mouse, then click a year to dive in. Esc or Back gets you out. (The balls are fine.)',
     year: '{y}',
     videos: { one: '{n} video', other: '{n} videos' },
     untitled: '(untitled)',
