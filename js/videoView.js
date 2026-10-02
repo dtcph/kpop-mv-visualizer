@@ -2,8 +2,37 @@
 // d3-force simulation, driven manually (not its internal timer) so we can
 // pause it while inactive. Canvas-rendered, quadtree-based hit testing.
 
-import { clamp, colorForVideo } from './utils.js';
+import { clamp, hashColor } from './utils.js';
 import { showTooltip, hideTooltip } from './tooltip.js';
+
+// Pulls nodes toward the centroid of their own artist group each tick, so
+// videos from the same group drift together and settle in the same area.
+function forceCluster(nodes, strength) {
+  return (alpha) => {
+    const centroids = new Map();
+    for (const n of nodes) {
+      if (n.isHub) continue;
+      let c = centroids.get(n.clusterKey);
+      if (!c) {
+        c = { x: 0, y: 0, count: 0 };
+        centroids.set(n.clusterKey, c);
+      }
+      c.x += n.x;
+      c.y += n.y;
+      c.count++;
+    }
+    for (const c of centroids.values()) {
+      c.x /= c.count;
+      c.y /= c.count;
+    }
+    for (const n of nodes) {
+      if (n.isHub) continue;
+      const c = centroids.get(n.clusterKey);
+      n.vx -= (n.x - c.x) * strength * alpha;
+      n.vy -= (n.y - c.y) * strength * alpha;
+    }
+  };
+}
 
 export class VideoView {
   constructor(config) {
@@ -59,15 +88,24 @@ export class VideoView {
       color: yearData.color,
     };
 
+    // Group videos by artist so nodes from the same group get a shared
+    // color and an initial position in the same area of the layout.
+    const artists = Array.from(new Set(yearData.videos.map((v) => v.artist)));
+    const artistAngle = new Map(artists.map((a, i) => [a, (i / artists.length) * Math.PI * 2]));
+    const artistColor = new Map(artists.map((a) => [a, hashColor(a)]));
+
     this.nodes = yearData.videos.map((v, i) => {
-      const angle = (i / yearData.videos.length) * Math.PI * 2;
+      const angle = artistAngle.get(v.artist) + (Math.random() - 0.5) * 0.4;
+      const r = 4 + Math.random() * 10;
       return {
         id: i,
         video: v,
         isHub: false,
-        x: cx + Math.cos(angle) * 4,
-        y: cy + Math.sin(angle) * 4,
+        x: cx + Math.cos(angle) * r,
+        y: cy + Math.sin(angle) * r,
         radius: c.nodeRadius,
+        color: artistColor.get(v.artist),
+        clusterKey: v.artist,
       };
     });
 
@@ -87,6 +125,7 @@ export class VideoView {
       .force('collide', d3.forceCollide((d) => d.radius + c.collidePadding))
       .force('x', d3.forceX(cx).strength(0.02))
       .force('y', d3.forceY(cy).strength(0.02))
+      .force('cluster', forceCluster(allNodes, c.clusterStrength))
       .stop();
 
     this.simulation.alpha(1);
@@ -159,13 +198,12 @@ export class VideoView {
     }
     ctx.stroke();
 
-    const nodeColor = this.config.nodeColor;
     for (const n of this.nodes) {
       const isHover = n === this.hovered;
       const r = n.radius * (isHover ? 1.35 : 1);
       ctx.beginPath();
       ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
-      ctx.fillStyle = n.video.hasLink ? nodeColor : 'rgba(138, 138, 160, 0.6)';
+      ctx.fillStyle = n.video.hasLink ? n.color : 'rgba(138, 138, 160, 0.6)';
       ctx.fill();
       if (isHover) {
         ctx.lineWidth = 2;

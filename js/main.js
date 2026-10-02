@@ -36,13 +36,13 @@ const CONFIG = {
   nodeRadiusFrac: 0.0055,
   nodeRadius: 5,
   collidePadding: 2.5,
-  linkDistanceFrac: 0.24,
-  linkDistance: 220,
+  linkDistanceFrac: 0.25,
+  linkDistance: 200,
   linkStrength: 0.35,
   chargeStrength: 55,
   videoAlphaDecay: 0.02,
   videoVelocityDecay: 0.35,
-  nodeColor: "#23e8ff",
+  clusterStrength: 0.5,
 };
 
 function computeResponsiveConfig(width, height) {
