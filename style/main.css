@@ -141,3 +141,72 @@ html, body {
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
+
+/* First-visit welcome popup */
+#welcome {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(6, 6, 10, 0.6);
+  backdrop-filter: blur(4px);
+  transition: opacity 0.25s ease;
+}
+
+#welcome.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#welcomeCard {
+  position: relative;
+  max-width: 440px;
+  padding: 32px 32px 26px;
+  background: rgba(20, 20, 30, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 18px;
+  box-shadow: 0 0 60px rgba(255, 47, 208, 0.2);
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+#welcomeCard h2 {
+  margin: 0 0 14px;
+  padding-right: 28px;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  background: linear-gradient(90deg, var(--cyan), var(--magenta) 55%, var(--lime));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+#welcomeCard p {
+  margin: 0 0 10px;
+  color: var(--text-dim);
+}
+
+#welcomeClose {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+#welcomeClose:hover {
+  background: rgba(255, 255, 255, 0.12);
+}

@@ -6,6 +6,9 @@ import { fitCanvasToWindow } from "./utils.js";
 import { YearView } from "./yearView.js";
 import { VideoView } from "./videoView.js";
 import { hideTooltip } from "./tooltip.js";
+import { initWelcome } from "./welcome.js";
+
+initWelcome();
 
 // ---------------------------------------------------------------------
 // Tuning constants. Sizes below marked "(auto)" are recomputed on resize
