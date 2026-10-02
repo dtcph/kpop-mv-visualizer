@@ -20,11 +20,11 @@ const CONFIG = {
   maxBallRadius: 110,
 
   // year-view physics
-  ballRestitution: 0.75,
-  ballFrictionAir: 0.45,
+  ballRestitution: 0.55,
+  ballFrictionAir: 0.15,
   centerForceStrength: 0.00001, // force per ms scaling toward viewport center
-  pushSpeedThreshold: 16, // px/frame smoothed pointer speed before a push fires
-  pushScale: 0.7,
+  pushSpeedThreshold: 14, // px/frame smoothed pointer speed before a push fires
+  pushScale: 0.8,
   pushMaxImpulse: 10,
   selectTransitionMs: 600,
 
